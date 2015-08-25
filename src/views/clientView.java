@@ -43,24 +43,18 @@ public class clientView extends JPanel implements ActionListener {
 		//Use the default text position of CENTER, TRAILING (RIGHT).
 		dcb.setMnemonic(KeyEvent.VK_D);
 		dcb.setActionCommand("disconnect");
-		dcb.setEnabled(false);
 		
 		lib = new JButton("Login");
 		lib.setVerticalTextPosition(AbstractButton.CENTER);
 		lib.setHorizontalTextPosition(AbstractButton.LEADING); //aka LEFT, for left-to-right locales
 		lib.setMnemonic(KeyEvent.VK_L);
 		lib.setActionCommand("login");
-		lib.setVisible(false);
 		
 		un = new JLabel("Username: ");
-		un.setVisible(false);
 		usern = new JTextField(20);
-		usern.setVisible(false);
 		up = new JLabel("Password: ");
-		un.setVisible(false);
 		userp = new JPasswordField(20);
 		userp.setActionCommand("login");
-		userp.setVisible(false);
 		
 		//Listen for actions on buttons 1 and 3.
 		cb.addActionListener(this);
@@ -97,7 +91,7 @@ public class clientView extends JPanel implements ActionListener {
 		if ("connect".equals(e.getActionCommand())) {
 			if (uclient.connect()){
 				//JOptionPane.showMessageDialog(frame, "Connect successful.");
-				showLogin();
+				//showLogin();
 			}
 			else{
 				JOptionPane.showMessageDialog(frame, "Connect not successful.");

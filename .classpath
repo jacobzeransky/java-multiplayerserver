@@ -8,5 +8,6 @@
 	<classpathentry kind="lib" path="C:/Users/jaze/Downloads/apache-pivot-2.0.4/apache-pivot-2.0.4/lib/pivot-web-server-2.0.4.jar"/>
 	<classpathentry kind="lib" path="C:/Users/jaze/Downloads/apache-pivot-2.0.4/apache-pivot-2.0.4/lib/pivot-wtk-2.0.4.jar"/>
 	<classpathentry kind="lib" path="C:/Users/jaze/Downloads/apache-pivot-2.0.4/apache-pivot-2.0.4/lib/pivot-wtk-terra-2.0.4.jar"/>
+	<classpathentry kind="lib" path="C:/Users/jaze/Downloads/mysql-connector-java-3.1.14/mysql-connector-java-3.1.14/mysql-connector-java-3.1.14-bin.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

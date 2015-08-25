@@ -6,20 +6,23 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.concurrent.LinkedBlockingDeque;
 
 import objects.internalMsg;
 
 
 public class mpsClient {
-	Socket ssocket;
-	PrintWriter out;
-	BufferedReader in;
-	String hostname;
-	int portnumber;
+	private Socket ssocket;
+	private PrintWriter out;
+	private BufferedReader in;
+	private String hostname;
+	private int portnumber;
+	private LinkedBlockingDeque<String> event_q;
 	
 	public mpsClient(String host, int port){
 		hostname = host;
 		portnumber = port;
+		event_q = new LinkedBlockingDeque<String>();
 	}
 	
 	public boolean connect(){
@@ -28,13 +31,16 @@ public class mpsClient {
 			ssocket = new Socket(hostname, portnumber);
 			out = new PrintWriter(ssocket.getOutputStream(), true);
 			in = new BufferedReader(new InputStreamReader(ssocket.getInputStream()));
+			event_q.offer("Connected");
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			event_q.offer("Connection error: "+e);
 			return false;
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			event_q.offer("Connection error: "+e);
 			return false;
 		}
 		return true;
@@ -42,12 +48,15 @@ public class mpsClient {
 	
 	public boolean disconnect(){
 		try {
+			out.println("005");
 			ssocket.close();
 			out = null;
 			in = null;
+			event_q.offer("Disconnected");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			event_q.offer("Disconnection error: "+e);
 			return false;
 		}
 		return true;
@@ -65,10 +74,11 @@ public class mpsClient {
 				respmsg = in.readLine();
 				
 				if (respmsg != null){
+					
 					return Integer.parseInt(respmsg);
 				}
 			} catch (IOException e) {
-				
+				event_q.offer("Login error: "+e);
 			}
 		}
 		

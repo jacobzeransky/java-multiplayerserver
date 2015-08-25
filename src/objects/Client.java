@@ -10,12 +10,14 @@ import java.net.Socket;
 public class Client {
 	
 	private String user;
+	private Socket sock;
 	private PrintWriter sockout;
 	private BufferedReader sockin;
 	private boolean admin = false;
 	
 	public Client(Socket s) throws IOException{
 		user = "TEMP: "+s.getInetAddress().toString();
+		sock = s;
 		sockout = new PrintWriter(s.getOutputStream(), true); 
 		sockin = new BufferedReader(new InputStreamReader(s.getInputStream()));
 	}
@@ -41,4 +43,7 @@ public class Client {
 		return admin;
 	}
 
+	public void disconnectClient() throws IOException{
+		sock.close();
+	}
 }

@@ -29,10 +29,9 @@ public class S_delegatorThread extends Thread{
 	public void run(){
 		String msg;
 		internalMsg imsg;
-		ArrayList<Client> tempcl;
+		ArrayList<Client> toRemove = new ArrayList<Client>();
 		while (true){
-			tempcl = clients;
-			for (Client cl : tempcl){
+			for (Client cl : clients){
 				
 				try {
 					msg = cl.input().readLine();
@@ -51,8 +50,13 @@ public class S_delegatorThread extends Thread{
 							
 							break;
 						case 2:		// login/authenticate
-							auth.offer(imsg);
-							events.offer(cl.getName() +" is attempting to login");
+							if (cl.getName().charAt(4) == ':'){
+								events.offer("Error: "+cl.getName() +" is attempting to login again");
+							}
+							else{
+								auth.offer(imsg);
+								events.offer(cl.getName() +" is attempting to login");
+							}
 							break;
 						case 3:		// new user
 							auth.offer(imsg);
@@ -61,18 +65,35 @@ public class S_delegatorThread extends Thread{
 						case 4:		// admin command
 							adminq.offer(imsg);
 							break;
-						default:
-							System.out.println("error type: "+imsg.getType());
+						case 5:		// disconnect
+							toRemove.add(cl);
+							events.offer(cl.getName() +" is disconnecting");
+							break;
 						}
 						
 					}
 				} catch (IOException e) {
 					events.offer(cl.getName() + " IO error: "+ e.toString());
 				}
+				
 				if (!cont){
 					break;
 				}
 			}
+			
+			if (toRemove.size() != 0){
+				for (Client cl : toRemove){
+					try {
+						cl.disconnectClient();
+					} catch (IOException e) {
+						events.offer("Error disconnecting "+cl.getName());
+						e.printStackTrace();
+					}
+				}
+				clients.removeAll(toRemove);
+				toRemove = new ArrayList<Client>();
+			}
+			
 			if (!cont){
 				break;
 			}

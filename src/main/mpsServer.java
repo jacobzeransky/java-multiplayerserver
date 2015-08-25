@@ -3,6 +3,7 @@ package main;
 import java.util.ArrayList;
 import java.util.concurrent.LinkedBlockingDeque;
 
+import connection.connectionPool;
 import objects.Client;
 import objects.internalMsg;
 import threads.S_authenticatorThread;
@@ -40,6 +41,7 @@ public class mpsServer {
 		auth_t.shutdown();
 		delg_t.shutdown();
 		
+		connectionPool.getInstance().shutDown();
 		/*
 		try{
 		for (int i=0;i<4;i++){

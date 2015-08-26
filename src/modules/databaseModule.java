@@ -14,6 +14,7 @@ public class databaseModule {
 
 	private sqlConnection connection = null;
 	String sql = null;
+	java.util.Date jdate = new java.util.Date();
 	
 	public databaseModule(){
 		connection = new sqlConnection();
@@ -36,7 +37,14 @@ public class databaseModule {
 					boolean ret = true;
 					System.out.println(r.getString(1) +" = "+pd);
 					if (r.getString(1).equals(pd)){
+						
 						//TODO: admin stuff?
+						
+						sql = "update user_state set status=1, log_time = '"+(new Timestamp(jdate.getTime())).toString()+"' where u_name = '"+ud+"'";
+						if (connection.executeStatement(sql) != 1){
+							System.out.println("error loging in user");
+							return false;
+						}
 					}
 					else{
 						throw new IncorrectPasswordException();
@@ -55,13 +63,24 @@ public class databaseModule {
 		throw new UserException();
 	}
 	
+	public boolean logoutUser(String ud){
+		sql = "update user_state set status=0, log_time = '"+(new Timestamp(jdate.getTime())).toString()+"' where u_name = '"+ud+"'";
+		
+		if (connection.executeStatement(sql) != 1){
+			System.out.println("error loging user");
+			return false;
+		}
+		
+		return true;
+	}
+	
 	public boolean createNewUser(String ud, String pd) throws UserException{
 
 		if (userExists(ud)){
 			throw new UserException();
 		}
 		
-		java.util.Date jdate = new java.util.Date();
+		
 		
 		sql = "insert into mpdb.user_state (u_name, log_time) values ('"+ud+"', '"+(new Timestamp(jdate.getTime())).toString()+"')";
 		
@@ -102,6 +121,7 @@ public class databaseModule {
 		//	System.out.println(dbmod.createNewUser("joebob", "password"));
 			try {
 				System.out.println(dbmod.loginUser("joebob", "password"));
+				System.out.println(dbmod.logoutUser("joebob"));
 			} catch (IncorrectPasswordException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

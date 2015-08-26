@@ -50,7 +50,7 @@ public class S_delegatorThread extends Thread{
 							
 							break;
 						case 2:		// login/authenticate
-							if (cl.getName().charAt(4) == ':'){
+							if (cl.getName().charAt(4) != ':'){
 								events.offer("Error: "+cl.getName() +" is attempting to login again");
 							}
 							else{

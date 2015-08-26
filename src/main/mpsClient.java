@@ -84,6 +84,27 @@ public class mpsClient {
 		
 	}
 	
+	public int createUser(String u, char[] p){
+		String msg = "003" + u + ":";
+		for (int i=0;i<p.length;i++){
+			msg += p[i];
+		}
+		out.println(msg);
+		String respmsg;
+		while (true){
+			try{
+				respmsg = in.readLine();
+				
+				if (respmsg != null){
+					
+					return Integer.parseInt(respmsg);
+				}
+			} catch (IOException e) {
+				event_q.offer("Creation error: "+e);
+			}
+		}
+	}
+	
  /*   public static void main(String[] args) {
         DesktopApplicationContext.main(clientView.class, args);
         

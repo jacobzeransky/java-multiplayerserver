@@ -2,23 +2,21 @@ package threads;
 
 import java.util.concurrent.LinkedBlockingDeque;
 
-import modules.authenticatorModule;
-import modules.databaseModule;
-import exceptions.*;
+import exceptions.IncorrectPasswordException;
+import exceptions.UserException;
+import modules.userModule;
 import objects.internalMsg;
 
 public class S_authenticatorThread extends Thread{
 
 	private final LinkedBlockingDeque<internalMsg> auth;
 	private final LinkedBlockingDeque<String> events;
-	//private final authenticatorModule authmod;
 	private boolean cont = true;
 	
 	public S_authenticatorThread(LinkedBlockingDeque<internalMsg> auth_q, LinkedBlockingDeque<String> event_q){
 		super("mp-AuthenticatorThread");
 		auth = auth_q;
 		events = event_q;
-		//authmod = new authenticatorModule();
 		events.offer("Authenticator Thread started");
 	}
 	
@@ -33,9 +31,9 @@ public class S_authenticatorThread extends Thread{
 				
 				if (imsg.getType() == 2){ // login	
 					try{
-						databaseModule dbmod = new databaseModule();
-						uresp = dbmod.loginUser(userdata[0], userdata[1]);
-						dbmod.close();
+						userModule umod = new userModule();
+						uresp = umod.loginUser(userdata[0], userdata[1]);
+						umod.close();
 					} catch (IncorrectPasswordException e){
 						imsg.getClient().output().println("1");
 						events.put("Failed login, incorrect password for: "+userdata[0]);
@@ -51,9 +49,9 @@ public class S_authenticatorThread extends Thread{
 				}
 				else{ // new user
 					try{
-						databaseModule dbmod = new databaseModule();
-						uresp = dbmod.createNewUser(userdata[0], userdata[1]);
-						dbmod.close();
+						userModule umod = new userModule();
+						uresp = umod.createNewUser(userdata[0], userdata[1]);
+						umod.close();
 					} catch (UserException e){
 						imsg.getClient().output().println("1");
 						events.put("Failed creation, user: "+userdata[0]+" already exists");

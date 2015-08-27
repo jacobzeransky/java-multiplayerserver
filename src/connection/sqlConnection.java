@@ -50,17 +50,21 @@ public class sqlConnection {
 		return 0;
 	}
 	
-	public int executeUpdate (String sql)
+	public int[] executeGameCreation (String sql)
 	{
+		int[] ret = {0, -1};
 		try {
 			stmt = connection.createStatement();
-			int rowsEffected = stmt.executeUpdate(sql);
-		//	connection.commit();
+			ret[0] = stmt.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
+			ResultSet rs = stmt.getGeneratedKeys();
+			if (rs.next()){
+				ret[1] = rs.getInt(1);
+			}
 			stmt.close();
-			return rowsEffected;
+			return ret;
 		} catch (SQLException e) {
 			e.printStackTrace();
-			return e.getErrorCode();
+			return ret;
 		} 
 	}
 

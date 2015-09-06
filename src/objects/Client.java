@@ -31,6 +31,10 @@ public class Client {
 		admin = a;
 	}
 	
+	public boolean isLoggedIn(){
+		return (user.charAt(4) != ':');
+	}
+	
 	public PrintWriter output(){
 		return sockout;
 	}

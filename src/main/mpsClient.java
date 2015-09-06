@@ -8,21 +8,29 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.concurrent.LinkedBlockingDeque;
 
-import objects.internalMsg;
+import threads.C_delegatorThread;
 
 
 public class mpsClient {
 	private Socket ssocket;
 	private PrintWriter out;
-	private BufferedReader in;
+	private BufferedReader in = null;
 	private String hostname;
 	private int portnumber;
 	private LinkedBlockingDeque<String> event_q;
+	private LinkedBlockingDeque<String> chat_q;
+	private LinkedBlockingDeque<Integer> response_q;
+	private C_delegatorThread cdelg_t;
+	//private LinkedBlockingDeque<String> chat_q;
 	
 	public mpsClient(String host, int port){
 		hostname = host;
 		portnumber = port;
 		event_q = new LinkedBlockingDeque<String>();
+		chat_q = new LinkedBlockingDeque<String>();
+		response_q = new LinkedBlockingDeque<Integer>();
+		
+		
 	}
 	
 	public boolean connect(){
@@ -31,16 +39,20 @@ public class mpsClient {
 			ssocket = new Socket(hostname, portnumber);
 			out = new PrintWriter(ssocket.getOutputStream(), true);
 			in = new BufferedReader(new InputStreamReader(ssocket.getInputStream()));
+			
+			
+			cdelg_t = new C_delegatorThread(in, event_q, chat_q, response_q);
+			cdelg_t.start();
 			event_q.offer("Connected");
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-			event_q.offer("Connection error: "+e);
+			//e.printStackTrace();
+			event_q.offer("Connection error: "+e.getMessage());
 			return false;
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-			event_q.offer("Connection error: "+e);
+			//e.printStackTrace();
+			event_q.offer("Connection error: "+e.getMessage());
 			return false;
 		}
 		return true;
@@ -49,14 +61,15 @@ public class mpsClient {
 	public boolean disconnect(){
 		try {
 			out.println("005");
+			cdelg_t.shutdown();
 			ssocket.close();
 			out = null;
-			in = null;
+			in = null;			
 			event_q.offer("Disconnected");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			event_q.offer("Disconnection error: "+e);
+			event_q.offer("Disconnection error: "+e.getMessage());
 			return false;
 		}
 		return true;
@@ -67,18 +80,27 @@ public class mpsClient {
 		for (int i=0;i<p.length;i++){
 			msg += p[i];
 		}
+
 		out.println(msg);
-		String respmsg;
+
+		event_q.offer("Sending credentials...");
+		int resp;
 		while (true){
 			try{
-				respmsg = in.readLine();
-				
-				if (respmsg != null){
-					
-					return Integer.parseInt(respmsg);
+		
+				resp = response_q.take();
+	
+				if (resp == 0){
+					event_q.offer("Login successful");
 				}
-			} catch (IOException e) {
-				event_q.offer("Login error: "+e);
+				else{
+					event_q.offer("Login unsuccessful");
+				}
+				return resp;
+				
+			} catch (InterruptedException e) {
+				event_q.offer("Login error: "+e.getMessage());
+				return 5;
 			}
 		}
 		
@@ -90,20 +112,43 @@ public class mpsClient {
 			msg += p[i];
 		}
 		out.println(msg);
-		String respmsg;
-		while (true){
+		event_q.offer("Sending new user information...");
+		int resp;
+		while (true){			
 			try{
-				respmsg = in.readLine();
-				
-				if (respmsg != null){
-					
-					return Integer.parseInt(respmsg);
+				resp = response_q.take();
+
+				if (resp == 0){
+					event_q.offer("User creation successful");
 				}
-			} catch (IOException e) {
-				event_q.offer("Creation error: "+e);
+				else{
+					event_q.offer("User creation unsuccessful");
+				}
+				return resp;
+				
+			} catch (InterruptedException e) {
+				event_q.offer("Creation error: "+e.getMessage());
+				return 5;
 			}
 		}
 	}
+	
+	public boolean chatMessage(String m){
+		String msg = "006"+m;
+		out.println(msg);
+		event_q.offer("Sending chat message...");
+
+		return true;
+	}
+	
+	public String getEvent(){
+		return event_q.poll();
+	}
+	
+	public String getChat(){
+		return chat_q.poll();
+	}
+	
 	
  /*   public static void main(String[] args) {
         DesktopApplicationContext.main(clientView.class, args);

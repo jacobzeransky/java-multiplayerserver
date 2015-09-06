@@ -1,29 +1,26 @@
 package threads;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
-import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import objects.Client;
 
 public class S_connectorThread extends Thread{
 
 	private final int portNumber;
-	private final ArrayList<Client> clients;
+	private final LinkedBlockingQueue<Client> clients_toadd;
 	private final LinkedBlockingDeque<String> events;
 	private boolean cont = true;
 	
-	public S_connectorThread(int port, ArrayList<Client> client_l, LinkedBlockingDeque<String> event_q){
+	public S_connectorThread(int port, LinkedBlockingQueue<Client> client_toadd_q, LinkedBlockingDeque<String> event_q){
 		super("mp-ConnectorThread");
 		portNumber = port;
-		clients = client_l;
+		clients_toadd = client_toadd_q;
 		events = event_q;
 		events.offer("Connector Thread started");
 	}
@@ -39,7 +36,7 @@ public class S_connectorThread extends Thread{
 					cls = serverSocket.accept();
 				} catch (SocketTimeoutException e) {
 					if (cont){
-						System.out.println("Timing out, continue");
+						//System.out.println("Timing out, continue");
 						continue;
 					}
 					else{
@@ -47,7 +44,7 @@ public class S_connectorThread extends Thread{
 					}
 				}
 				
-				clients.add(new Client(cls));
+				clients_toadd.add(new Client(cls));
 				events.offer(cls.getInetAddress().toString()+" connected");
 				if (!cont){
 					break;

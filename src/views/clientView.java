@@ -1,8 +1,15 @@
 package views;
+import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 import javax.swing.AbstractButton;
 import javax.swing.JButton;
@@ -11,7 +18,10 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.Timer;
 
 import main.mpsClient;
 
@@ -20,110 +30,138 @@ public class clientView extends JPanel implements ActionListener {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	private JButton cb, dcb, lib, cub;
-	private JTextField usern;
-	private JPasswordField userp, ruserp;
-	private JLabel un, up, rup;
+	private JButton connectb, disconnectb, loginb, createuserb, joinlobbyb;
+	private JTextField usernametf, chattf;
+	private JPasswordField userpf, repeatuserpf;
+	private JLabel usernamel, userpasswordl, repeatuserpasswordl;
+	private JPanel topbuttonp, bottombuttonp, eventp, chatp, loginp;
+	private JScrollPane eventsp, chatsp;
 	private mpsClient uclient;
 	private static JFrame frame;
+	private JTextArea eventta, chatta;
+	private Timer timer;
+	private int state;
 
 	public clientView() {
+		super(new GridBagLayout());
 		uclient = new mpsClient("0.0.0.0", 10355);
 		
-		cb = new JButton("Connect");
-		cb.setVerticalTextPosition(AbstractButton.CENTER);
-		cb.setHorizontalTextPosition(AbstractButton.LEADING); //aka LEFT, for left-to-right locales
-		cb.setMnemonic(KeyEvent.VK_C);
-		cb.setActionCommand("connect");
+		connectb = new JButton("Connect");		
+		disconnectb = new JButton("Disconnect");		
+		loginb = new JButton("Login");		
+		createuserb = new JButton("Create User");
+		joinlobbyb = new JButton("Join Lobby");
+		
+		usernamel = new JLabel("Username: ");
+		usernametf = new JTextField(10);
+		userpasswordl = new JLabel("Password: ");
+		userpf = new JPasswordField(10);
+		repeatuserpasswordl =new JLabel("Repeat password: ");
+		repeatuserpf = new JPasswordField(10);
+		
+		eventta = new JTextArea(10, 20);
+		eventta.setEditable(false);
+		eventta.setVisible(true);
+		
+		chatta = new JTextArea(15, 20);
+		chatta.setEditable(false);
+		chatta.setBackground(Color.LIGHT_GRAY);
+		chattf = new JTextField(20);
 		
 		
-		dcb = new JButton("Disconnect");
-		//Use the default text position of CENTER, TRAILING (RIGHT).
-		dcb.setMnemonic(KeyEvent.VK_D);
-		dcb.setActionCommand("disconnect");
+		chattf.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent ae) {
+				uclient.chatMessage(chattf.getText());
+				chattf.setText("");
+			}
+		});
 		
-		lib = new JButton("Login");
-		lib.setVerticalTextPosition(AbstractButton.CENTER);
-		lib.setHorizontalTextPosition(AbstractButton.LEADING); //aka LEFT, for left-to-right locales
-		lib.setMnemonic(KeyEvent.VK_L);
-		lib.setActionCommand("login");
-		
-		cub = new JButton("Creat User");
-		cub.setVerticalTextPosition(AbstractButton.CENTER);
-		cub.setHorizontalTextPosition(AbstractButton.LEADING); //aka LEFT, for left-to-right locales
-		cub.setMnemonic(KeyEvent.VK_L);
-		
-		un = new JLabel("Username: ");
-		usern = new JTextField(20);
-		up = new JLabel("Password: ");
-		userp = new JPasswordField(20);
-		rup =new JLabel("Repeat password: ");
-		ruserp = new JPasswordField(20);
+		userpf.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent ae) {
+				loginb.doClick();
+			}
+		});
+	//	event_area.setBackground(Color.gray);
 		
 		//Listen for actions on buttons 1 and 3.
-		cb.addActionListener(new ActionListener() {
-
+		connectb.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
             	if (uclient.connect()){
     				//JOptionPane.showMessageDialog(frame, "Connect successful.");
-    				//showLogin();
+    				showLogin();
     			}
     			else{
     				JOptionPane.showMessageDialog(frame, "Connect not successful.");
     			}
             }
         });
-		dcb.addActionListener(new ActionListener() {
+		disconnectb.addActionListener(new ActionListener() {
 
             public void actionPerformed(ActionEvent e) {
             	if (uclient.disconnect()){
-    				JOptionPane.showMessageDialog(frame, "Disconnect successful.");
-    				dcb.setEnabled(false);
-    				cb.setEnabled(true);
+    				//JOptionPane.showMessageDialog(frame, "Disconnect successful.");
+    				showConnect();
     			}
     			else{
     				JOptionPane.showMessageDialog(frame, "Disconnect not successful.");
     			}
             }
         });
-		lib.addActionListener(new ActionListener() {
+		loginb.addActionListener(new ActionListener() {
 
             public void actionPerformed(ActionEvent e) {
-            	if (usern.getText().length() < 4){
+            	if (usernametf.getText().length() < 4){
     				JOptionPane.showMessageDialog(frame, "Username too short");
     			}
-    			else if (userp.getPassword().length < 4){
+    			else if (userpf.getPassword().length < 4){
     				JOptionPane.showMessageDialog(frame, "Password too short.");
+    				
     			}
     			else{
-    				int resp = uclient.login(usern.getText(), userp.getPassword());
+    				int resp = uclient.login(usernametf.getText(), userpf.getPassword());
     				if (resp == 0){
     					JOptionPane.showMessageDialog(frame, "Login successful");
+    					usernametf.setText("");
+    					userpf.setText("");
+    					
+    					showMain();
     				}
     				else if (resp == 1){
     					JOptionPane.showMessageDialog(frame, "invalid password");
+    					userpf.requestFocusInWindow();
     					
     				}
-    				else{
+    				else if (resp == 2){
     					JOptionPane.showMessageDialog(frame, "unkown user");
+    				}
+    				else if (resp == 3){
+    					JOptionPane.showMessageDialog(frame, "database error");
+    				}
+    				else if (resp == 4){
+    					JOptionPane.showMessageDialog(frame, "user already logged in error");
+    				}
+    				else{
+    					JOptionPane.showMessageDialog(frame, "ERROR ERROR");
     				}
     			}
             }
         });
-		cub.addActionListener(new ActionListener() {
+		createuserb.addActionListener(new ActionListener() {
 
             public void actionPerformed(ActionEvent e) {
-            	if (usern.getText().length() < 4){
+            	if (usernametf.getText().length() < 4){
     				JOptionPane.showMessageDialog(frame, "Username too short");
     			}
-    			else if (userp.getPassword().length < 4){
+    			else if (userpf.getPassword().length < 4){
     				JOptionPane.showMessageDialog(frame, "Password too short.");
     			}
-    			else if (differentPasswords(userp.getPassword(), ruserp.getPassword())){
+    			else if (differentPasswords(userpf.getPassword(), repeatuserpf.getPassword())){
     				JOptionPane.showMessageDialog(frame, "Passwords dont match.");
     			}
     			else{
-    				int resp = uclient.createUser(usern.getText(), userp.getPassword());
+    				int resp = uclient.createUser(usernametf.getText(), userpf.getPassword());
     				if (resp == 0){
     					JOptionPane.showMessageDialog(frame, "Creation successful");
     				}
@@ -131,8 +169,11 @@ public class clientView extends JPanel implements ActionListener {
     					JOptionPane.showMessageDialog(frame, "user already exists");
     					
     				}
-    				else{
+    				else if (resp == 2){
     					JOptionPane.showMessageDialog(frame, "database error");
+    				}
+    				else{
+    					JOptionPane.showMessageDialog(frame, "ERROR ERROR");
     				}
     			}
             }
@@ -146,49 +187,171 @@ public class clientView extends JPanel implements ActionListener {
             	return false;
             }
         });
-	//	b1.setToolTipText("Click this button to disable the middle button.");
 		
-		//Add Components to this container, using the default FlowLayout.
-		add(cb);
-		add(dcb);
-		add(lib);
-		add(cub);
-		add(un);
-		add(usern);
-		add(up);
-		add(userp);
-		add(rup);
-		add(ruserp);
+		joinlobbyb.addActionListener(new ActionListener() {
+
+            public void actionPerformed(ActionEvent e) {
+            	System.out.println("lobby");
+            }
+
+        });
+		
+		GridBagConstraints c = new GridBagConstraints();
+		
+		// top button panel
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 1;
+		c.gridy = 0;
+		
+		topbuttonp = new JPanel();
+		topbuttonp.add(connectb);
+		topbuttonp.add(disconnectb);
+		
+		add(topbuttonp, c);
+		
+		// bottom button panel
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 1;
+		c.gridy = 2;
+		
+		bottombuttonp = new JPanel();
+		bottombuttonp.add(loginb);
+		bottombuttonp.add(createuserb);
+		bottombuttonp.add(joinlobbyb);
+		
+		add(bottombuttonp, c);
+		
+		// login labels and text fields
+		loginp = new JPanel(new GridBagLayout());
+		
+		c.gridx = 0;
+		c.gridy = 0;
+		loginp.add(usernamel, c);
+		
+		c.gridx = 1;
+		c.gridy = 0;
+		loginp.add(usernametf, c);
+		
+		c.gridx = 0;
+		c.gridy = 1;
+		loginp.add(userpasswordl, c);
+		
+		c.gridx = 1;
+		c.gridy = 1;
+		loginp.add(userpf, c);
+		
+		c.gridx = 0;
+		c.gridy = 2;
+		loginp.add(repeatuserpasswordl, c);
+		
+		c.gridx = 1;
+		c.gridy = 2;
+		loginp.add(repeatuserpf, c);
+		
+		c.gridx = 0;
+		c.gridy = 1;
+		add(loginp, c);
+		
+		// chat panel
+		chatp = new JPanel(new GridBagLayout());
+		chatsp = new JScrollPane(chatta);
+		
+		c.gridx = 0;
+		c.gridy = 0;
+		chatp.add(chatsp, c);
+		
+		c.gridx = 0;
+		c.gridy = 1;
+		chatp.add(chattf, c);
+		
+		c.gridx = 1;
+		c.gridy = 1;
+		add(chatp, c);
+		
+		// event text area
+		c.fill = GridBagConstraints.VERTICAL;
+		c.gridx = 2;
+		c.gridy = 1;
+		eventsp = new JScrollPane(eventta);
+		add(eventsp, c);
+		
+		showConnect();
+		
+		timer = new Timer(500, this);
+        timer.setInitialDelay(0);
+        timer.start();
+               
+	}
+	
+	private void showConnect(){
+		connectb.setVisible(true);
+		disconnectb.setVisible(false);
+		bottombuttonp.setVisible(false);
+		loginb.setVisible(true);
+		createuserb.setVisible(true);
+		joinlobbyb.setVisible(false);
+		loginp.setVisible(false);
+		chatp.setVisible(false);
+		eventsp.setVisible(true);
+		state = 0;
 	}
 	
 	private void showLogin(){
-		dcb.setEnabled(true);
-		cb.setEnabled(false);
-		
-		cb.setVisible(false);
-		lib.setVisible(true);
-		un.setVisible(true);
-		usern.setVisible(true);
-		up.setVisible(true);
-		userp.setVisible(true);
+		connectb.setVisible(false);
+		disconnectb.setVisible(true);
+		bottombuttonp.setVisible(true);		
+		loginp.setVisible(true);
+		state = 1;
 	}
 	
+	private void showMain(){
+		loginb.setVisible(false);
+		createuserb.setVisible(false);
+		loginp.setVisible(false);
+		joinlobbyb.setVisible(true);
+		chatp.setVisible(true);
+		state = 2;
+	}
 	
+	public void updateAreas() {
+        String s;
+     /*   while (true) {
+        	if ((s = uclient.getEvent()) != null){
+        		eventta.insert(s + "\n", eventta.getText().length());
+        		eventta.setCaretPosition(eventta.getText().length());
+        	}
+        	else{
+        		break;
+        	}
+        	
+        	if ((s = uclient.getChat()) != null){
+        		chatta.insert(s + "\n", chatta.getText().length());
+        		chatta.setCaretPosition(chatta.getText().length());
+        	}
+        	else{
+        		break;
+        	}
+        	//System.out.println("update");
+        }*/
+        while((s = uclient.getEvent()) != null){
+    		eventta.insert(s + "\n", eventta.getText().length());
+    		eventta.setCaretPosition(eventta.getText().length());
+    	}
+        if (state > 1){
+	        while ((s = uclient.getChat()) != null){
+	    		chatta.insert(s + "\n", chatta.getText().length());
+	    		chatta.setCaretPosition(chatta.getText().length());
+	    	}
+        }
+    }
 	
 	public void actionPerformed(ActionEvent e) {
-		if ("connect".equals(e.getActionCommand())) {
-			
-		} else if ("disconnect".equals(e.getActionCommand())) {
-			
-		}
-		else if ("login".equals(e.getActionCommand())){
-			
-		}
-		else{
-			
+		if (state > -1){
+			updateAreas();
 		}
 	}
 	
+
 	/**
 	* Create the GUI and show it.  For thread safety, 
 	* this method should be invoked from the 
@@ -198,8 +361,9 @@ public class clientView extends JPanel implements ActionListener {
 		
 		//Create and set up the window.
 		frame = new JFrame("Client-side");
-		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
+
 		//Create and set up the content pane.
 		clientView newContentPane = new clientView();
 		newContentPane.setOpaque(true); //content panes must be opaque
@@ -208,7 +372,8 @@ public class clientView extends JPanel implements ActionListener {
 		//Display the window.
 		frame.pack();
 		frame.setVisible(true);
-		frame.setSize(new Dimension(500,500));
+		frame.setSize(new Dimension(900,500));
+		 
 	}
 	
 	public static void main(String[] args) {
@@ -219,6 +384,7 @@ public class clientView extends JPanel implements ActionListener {
 				createAndShowGUI(); 
 			}
 		});
+	
 	}
 
 }

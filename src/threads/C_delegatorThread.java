@@ -4,6 +4,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.concurrent.LinkedBlockingDeque;
 
+// CLIENT-SIDE delegator
+// handles chat messages and response messages
+
 public class C_delegatorThread extends Thread{
 
 	private final BufferedReader in;

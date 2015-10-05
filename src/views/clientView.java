@@ -1,18 +1,13 @@
 package views;
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 
-import javax.swing.AbstractButton;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -24,6 +19,9 @@ import javax.swing.JTextField;
 import javax.swing.Timer;
 
 import main.mpsClient;
+import objects.Game;
+
+// CLIENT-SIDE entry point (ie run this main method to start client)
 
 public class clientView extends JPanel implements ActionListener {
 	/**
@@ -33,9 +31,10 @@ public class clientView extends JPanel implements ActionListener {
 	private JButton connectb, disconnectb, loginb, createuserb, joinlobbyb;
 	private JTextField usernametf, chattf;
 	private JPasswordField userpf, repeatuserpf;
-	private JLabel usernamel, userpasswordl, repeatuserpasswordl;
-	private JPanel topbuttonp, bottombuttonp, eventp, chatp, loginp;
+	private JLabel usernamel, userpasswordl, repeatuserpasswordl, lobbystatusl;
+	private JPanel topbuttonp, bottombuttonp, chatp, loginp, lobbyp;
 	private JScrollPane eventsp, chatsp;
+	private JComboBox<Game> gamescb;
 	private mpsClient uclient;
 	private static JFrame frame;
 	private JTextArea eventta, chatta;
@@ -68,6 +67,8 @@ public class clientView extends JPanel implements ActionListener {
 		chatta.setBackground(Color.LIGHT_GRAY);
 		chattf = new JTextField(20);
 		
+		gamescb = new JComboBox<Game>(Game.values());
+		lobbystatusl = new JLabel("Searching for opponent...");
 		
 		chattf.addActionListener(new ActionListener() {
 			@Override
@@ -157,6 +158,9 @@ public class clientView extends JPanel implements ActionListener {
     			else if (userpf.getPassword().length < 4){
     				JOptionPane.showMessageDialog(frame, "Password too short.");
     			}
+    			else if (repeatuserpf.getPassword().length == 0){
+    				JOptionPane.showMessageDialog(frame, "Please repeat password");
+    			}
     			else if (differentPasswords(userpf.getPassword(), repeatuserpf.getPassword())){
     				JOptionPane.showMessageDialog(frame, "Passwords dont match.");
     			}
@@ -191,7 +195,8 @@ public class clientView extends JPanel implements ActionListener {
 		joinlobbyb.addActionListener(new ActionListener() {
 
             public void actionPerformed(ActionEvent e) {
-            	System.out.println("lobby");
+            	showLobby();
+            	uclient.joinLobby((Game)gamescb.getSelectedItem());
             }
 
         });
@@ -275,6 +280,21 @@ public class clientView extends JPanel implements ActionListener {
 		eventsp = new JScrollPane(eventta);
 		add(eventsp, c);
 		
+		// lobby pane
+		lobbyp = new JPanel(new GridBagLayout());
+		
+		c.gridx = 0;
+		c.gridy = 0;
+		lobbyp.add(gamescb, c);
+		
+		c.gridx = 0;
+		c.gridy = 1;
+		lobbyp.add(lobbystatusl, c);
+		
+		c.gridx = 0;
+		c.gridy = 1;
+		add(lobbyp, c);
+		
 		showConnect();
 		
 		timer = new Timer(500, this);
@@ -293,6 +313,9 @@ public class clientView extends JPanel implements ActionListener {
 		loginp.setVisible(false);
 		chatp.setVisible(false);
 		eventsp.setVisible(true);
+		lobbyp.setVisible(false);
+		lobbystatusl.setVisible(false);
+		gamescb.setVisible(true);
 		state = 0;
 	}
 	
@@ -310,29 +333,23 @@ public class clientView extends JPanel implements ActionListener {
 		loginp.setVisible(false);
 		joinlobbyb.setVisible(true);
 		chatp.setVisible(true);
+		lobbyp.setVisible(true);
+		gamescb.setVisible(true);
+		lobbystatusl.setVisible(false);
 		state = 2;
 	}
 	
-	public void updateAreas() {
+	private void showLobby(){
+		lobbystatusl.setVisible(true);
+		lobbystatusl.setText("Searching for opponent...");
+		gamescb.setVisible(false);
+		state = 3;
+	}
+	
+	// updates chat and event areas
+	private void updateTextAreas() {
         String s;
-     /*   while (true) {
-        	if ((s = uclient.getEvent()) != null){
-        		eventta.insert(s + "\n", eventta.getText().length());
-        		eventta.setCaretPosition(eventta.getText().length());
-        	}
-        	else{
-        		break;
-        	}
-        	
-        	if ((s = uclient.getChat()) != null){
-        		chatta.insert(s + "\n", chatta.getText().length());
-        		chatta.setCaretPosition(chatta.getText().length());
-        	}
-        	else{
-        		break;
-        	}
-        	//System.out.println("update");
-        }*/
+
         while((s = uclient.getEvent()) != null){
     		eventta.insert(s + "\n", eventta.getText().length());
     		eventta.setCaretPosition(eventta.getText().length());
@@ -345,9 +362,23 @@ public class clientView extends JPanel implements ActionListener {
         }
     }
 	
+	private void handleMatchmaking(){
+		int resp = uclient.getResponse();
+		if (resp > -1){ // ie there has been a response
+			lobbystatusl.setText("Match found, connecting...");
+		}
+	}
+	
+	// triggered by timer
 	public void actionPerformed(ActionEvent e) {
+		// if client is running, basically
 		if (state > -1){
-			updateAreas();
+			updateTextAreas();
+			
+			// if currently in lobby looking for a game
+			if (state == 3){
+				handleMatchmaking();		
+			}
 		}
 	}
 	

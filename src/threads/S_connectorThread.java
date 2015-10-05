@@ -10,6 +10,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import objects.Client;
 
+// SERVER-SIDE
+// handles new socket connections and setting up clients 
+
 public class S_connectorThread extends Thread{
 
 	private final int portNumber;

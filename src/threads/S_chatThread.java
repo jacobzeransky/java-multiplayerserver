@@ -4,6 +4,10 @@ import java.util.concurrent.LinkedBlockingDeque;
 
 import objects.internalMsg;
 
+// SERVER-SIDE
+// handles formatting chat messages from users
+// could be expanded to log all messages
+
 public class S_chatThread extends Thread{
 
 	private final LinkedBlockingDeque<internalMsg> inc;

@@ -8,8 +8,11 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.concurrent.LinkedBlockingDeque;
 
+import objects.Game;
 import threads.C_delegatorThread;
 
+// backend client object used by clientView
+// delegator thread sorts messages from server and makes them available to the view
 
 public class mpsClient {
 	private Socket ssocket;
@@ -141,12 +144,25 @@ public class mpsClient {
 		return true;
 	}
 	
+	public boolean joinLobby(Game g){
+		String msg = "007"+g.toString();
+		out.println(msg);
+
+		event_q.offer("Joining "+g.toString()+" lobby...");
+
+		return true;
+	}
+	
 	public String getEvent(){
 		return event_q.poll();
 	}
 	
 	public String getChat(){
 		return chat_q.poll();
+	}
+	
+	public int getResponse(){
+		return (response_q.isEmpty() ? -1 : response_q.poll());
 	}
 	
 	

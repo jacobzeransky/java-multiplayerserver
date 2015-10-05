@@ -16,6 +16,7 @@ public class Client {
 	private boolean admin = false;
 	
 	public Client(Socket s) throws IOException{
+		// sets up client as unauthenticated
 		user = "TEMP: "+s.getInetAddress().toString();
 		sock = s;
 		sockout = new PrintWriter(s.getOutputStream(), true); 

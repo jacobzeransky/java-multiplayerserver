@@ -2,36 +2,48 @@ package threads;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import objects.Client;
+import objects.Game;
 import objects.internalMsg;
+
+// SERVER-SIDE
+// handles new messages received from client sockets
+// does some formatting and adds message to appropriate communication queue
+
+// for the moment also handles sending chat messages to clients
+// due to concurrency issues with client list
 
 public class S_delegatorThread extends Thread{
 
 	private final ArrayList<Client> clients;
 	private final LinkedBlockingQueue<Client> clients_toadd;
 	private final LinkedBlockingDeque<internalMsg> auth;
-	private final LinkedBlockingDeque<Client> lfg;
+	private final EnumMap<Game, LinkedBlockingDeque<Client>> lfg;
 	private final LinkedBlockingDeque<String> events;
 	private final LinkedBlockingDeque<internalMsg> adminq;
+	private final ConcurrentHashMap<Integer, LinkedBlockingDeque<String>> games;
 	private boolean cont = true;
 	
 	// chat broadcast related
 	private final LinkedBlockingDeque<String> fromchatthread;
 	private final LinkedBlockingDeque<internalMsg> tochatthread;
 	
-	public S_delegatorThread(ArrayList<Client> client_l, LinkedBlockingDeque<internalMsg> itochatthread, LinkedBlockingDeque<String> ifromchatthread, LinkedBlockingQueue<Client> client_toadd_q, LinkedBlockingDeque<internalMsg> auth_q, LinkedBlockingDeque<Client> lobby_q/*, HashMap<Integer, >gametheads*/, LinkedBlockingDeque<String> event_q, LinkedBlockingDeque<internalMsg> admin_q){
+	public S_delegatorThread(ArrayList<Client> client_l, LinkedBlockingDeque<internalMsg> itochatthread, LinkedBlockingDeque<String> ifromchatthread, LinkedBlockingQueue<Client> client_toadd_q, LinkedBlockingDeque<internalMsg> auth_q, EnumMap<Game, LinkedBlockingDeque<Client>> lobbyq_m, LinkedBlockingDeque<String> event_q, LinkedBlockingDeque<internalMsg> admin_q, ConcurrentHashMap<Integer, LinkedBlockingDeque<String>> gamesq_m){
 		super("mp-DelegatorThread");
 		clients = client_l;
 		clients_toadd = client_toadd_q;
 		auth = auth_q;
-		lfg = lobby_q;
+		lfg = lobbyq_m;
 		events = event_q;
 		adminq = admin_q;
 		fromchatthread = ifromchatthread;
 		tochatthread = itochatthread;
+		games = gamesq_m;
 		events.offer("Delegator Thread started");
 	}
 	
@@ -76,11 +88,8 @@ public class S_delegatorThread extends Thread{
 						System.out.println("error type: "+imsg.getType());
 						
 						switch (imsg.getType()){
-						case 0:		//join lobby
-							lfg.offer(cl);
-							events.offer(cl.getName() +" joined lobby");
-							break;
-						case 1:		// perform game move
+						case 0:		//unused?
+						case 1:		// more unused
 							
 							break;
 						case 2:		// login/authenticate
@@ -108,6 +117,21 @@ public class S_delegatorThread extends Thread{
 							
 							tochatthread.offer(imsg);
 							events.offer(cl.getName() +" sent chat");
+							break;
+						case 7:		// join lobby
+							try {
+								lfg.get(Game.valueOf(imsg.getContent())).offer(cl);
+								events.offer(cl.getName() +" joined lobby");
+							} catch (IllegalArgumentException e){
+								
+								// TODO: error reporting to client
+								events.offer("Error in "+cl.getName() +" joining lobby, enum string invalid");
+							}
+							
+							break;
+						case 8:		// game move
+							games.get(imsg.getGameid()).offer(imsg.getContent());
+							events.offer(cl.getName() +" performed move in game "+imsg.getGameid());
 							break;
 						}
 						

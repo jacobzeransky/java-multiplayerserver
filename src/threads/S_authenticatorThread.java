@@ -9,6 +9,10 @@ import exceptions.UserException;
 import modules.userModule;
 import objects.internalMsg;
 
+// SERVER-SIDE 
+// handles authenticating, creating new users, and logging out active users
+// queries sql database through userModule
+
 public class S_authenticatorThread extends Thread{
 
 	private final LinkedBlockingDeque<internalMsg> auth;
@@ -28,6 +32,7 @@ public class S_authenticatorThread extends Thread{
 		String[] userdata;
 		while (true){
 			try {
+				// attempt to get new message from authentication queue, formats it
 				imsg = auth.take();
 				userdata = imsg.getContent().split(":");
 				

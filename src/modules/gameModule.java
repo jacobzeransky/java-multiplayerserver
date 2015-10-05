@@ -42,7 +42,7 @@ public class gameModule extends databaseModule{
 				if (connection.executeStatement(sql) != 1){
 					throw new DatabaseError("End game, entry not updated id: "+id);
 				}
-				
+			/*	
 				sql = "update user_state set status=0, status_id=null where u_name = '"+rs.getString(1)+"'";
 				if (connection.executeStatement(sql) != 1){
 					throw new DatabaseError("End game, player 1 not updated");
@@ -52,6 +52,7 @@ public class gameModule extends databaseModule{
 				if (connection.executeStatement(sql) != 1){
 					throw new DatabaseError("End game, player 2 not updated");
 				}
+				*/
 				connection.closeStmt();
 				return true;
 			}
@@ -64,6 +65,7 @@ public class gameModule extends databaseModule{
 		return false;
 	}
 	
+	// for testing
 	public static void main(String[] args){
 		gameModule gmod = new gameModule();
 		

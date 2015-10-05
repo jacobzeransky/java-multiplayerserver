@@ -2,6 +2,8 @@ package modules;
 
 import connection.sqlConnection;
 
+// base class for gameModule and userModule
+// allows connection to backend database through sqlConnection
 
 public abstract class databaseModule {
 

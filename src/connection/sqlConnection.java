@@ -16,6 +16,7 @@ public class sqlConnection {
 		connection = connectionPool.getInstance().getConnection();	
 	}
 
+	// used for SELECT statements
 	public ResultSet executeSelect (String sql) {
 		try {
 			stmt = connection.createStatement();
@@ -36,6 +37,7 @@ public class sqlConnection {
 		}
 	}
 
+	// used for UPDATE statements
 	public int executeStatement (String sql)
 	{
 		try {
@@ -50,6 +52,7 @@ public class sqlConnection {
 		return 0;
 	}
 	
+	// used for creating new game entries
 	public int[] executeGameCreation (String sql)
 	{
 		int[] ret = {0, -1};
